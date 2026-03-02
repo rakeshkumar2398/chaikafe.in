@@ -22,9 +22,9 @@ pipeline {
             }
         }
 
-        stage('Docker Build Image) {
+        stage('Docker Build Image') {
             steps {
-                sh 'docker build -t chai-kafe-app:${IMAGE_TAG} .'
+                sh 'docker build -t chaikafe.in-app:${IMAGE_TAG} .'
             }
         }
 
@@ -39,7 +39,7 @@ pipeline {
 
         stage('Docker Tag') {
             steps {
-                sh 'docker tag chai-kafe-app:${IMAGE_TAG} $ECR_REPO:${IMAGE_TAG}'
+                sh 'docker tag chaikafe.in-app:${IMAGE_TAG} $ECR_REPO:${IMAGE_TAG}'
             }
         }
 
