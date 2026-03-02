@@ -70,3 +70,19 @@ Tag image
 Push image
 Pipeline fully automated.
 
+**#☸️ Phase 6: Kubernetes Deployment (Amazon EKS)(manual deployment of image )**
+Created:
+Kubernetes Namespace
+Deployment
+Service (LoadBalancer)
+Deployment Highlights:
+2 replicas
+LoadBalancer service for external access
+
+**#🔍 Phase 7: Application Testing on EKS**
+Verification Commands
+kubectl get pods -n chai-kafe
+kubectl get svc -n chai-kafe
+kubectl logs -f deploy/chai-kafe-app -n chai-kafe
+**#External Access:**
+Accessed via AWS LoadBalancer EXTERNAL-IP.
