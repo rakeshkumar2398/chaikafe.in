@@ -10,12 +10,12 @@ pipeline {
 
     stages {
 
-        stage('Code Cloning') {
+        stage('Git Checkout') {
             steps {
-                checkout scm
+                git branch: 'main',
+                    url: 'https://github.com/rakeshkumar2398/chaikafe.in.git'
             }
         }
-
         stage('Build Application') {
             steps {
                 sh 'mvn clean package -DskipTests'
