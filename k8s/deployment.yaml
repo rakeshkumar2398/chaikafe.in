@@ -62,7 +62,7 @@ spec:
               memory: "1024Mi"
           livenessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/liveness
               port: 8080
             initialDelaySeconds: 90
             periodSeconds: 15
@@ -71,7 +71,7 @@ spec:
 
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/readiness
               port: 8080
             initialDelaySeconds: 60
             periodSeconds: 10
