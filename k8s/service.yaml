@@ -4,13 +4,10 @@ kind: Service
 metadata:
   name: chai-kafe-service
   namespace: chai-kafe
-  labels:
-    app: chai-kafe-app
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: chai-kafe-app
   ports:
-    - protocol: TCP
-      port: 80
+    - port: 80
       targetPort: 8080
