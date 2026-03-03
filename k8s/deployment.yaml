@@ -49,6 +49,10 @@ spec:
                   name: chai-kafe-db-secret
                   key: DB_PASSWORD
 
+            # Important: prevent Java from taking too much memory (avoid Exit 137)
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=25.0"
+
           resources:
             requests:
               cpu: "250m"
@@ -56,12 +60,12 @@ spec:
             limits:
               cpu: "750m"
               memory: "1024Mi"
-              
+
           livenessProbe:
             httpGet:
               path: /actuator/health
               port: 8080
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 10
             timeoutSeconds: 3
             failureThreshold: 3
@@ -70,17 +74,7 @@ spec:
             httpGet:
               path: /actuator/health
               port: 8080
-            initialDelaySeconds: 10
+            initialDelaySeconds: 30
             periodSeconds: 5
             timeoutSeconds: 3
             failureThreshold: 3
-            initialDelaySeconds: 30
-            periodSeconds: 10
-
-          readinessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 5
-        
