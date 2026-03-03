@@ -201,6 +201,7 @@ Application accessible at:
 
 https://chaikafe.in
 https://www.chaikafe.in
+
 #**🔍 Phase 9: Application Testing on EKS**
 
 Verification Commands:
