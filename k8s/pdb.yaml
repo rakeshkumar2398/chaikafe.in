@@ -1,0 +1,12 @@
+#pod disruption budget
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: chai-kafe-pdb
+  namespace: chai-kafe
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: chai-kafe-app
