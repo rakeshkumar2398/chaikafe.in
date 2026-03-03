@@ -34,7 +34,7 @@ pipeline {
 
     stage('SonarQube Scan') {
       steps {
-        withSonarQubeEnv('sonarqube') {
+        withSonarQubeEnv('sonar-token') {
           sh 'mvn -B sonar:sonar'
         }
       }
