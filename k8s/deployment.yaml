@@ -21,6 +21,34 @@ spec:
           ports:
             - containerPort: 8080
 
+          # DB ENV from Kubernetes Secret
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: chai-kafe-db-secret
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: chai-kafe-db-secret
+                  key: DB_PORT
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: chai-kafe-db-secret
+                  key: DB_NAME
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: chai-kafe-db-secret
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: chai-kafe-db-secret
+                  key: DB_PASSWORD
+
           resources:
             requests:
               cpu: "200m"
@@ -33,6 +61,19 @@ spec:
             httpGet:
               path: /actuator/health
               port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
             initialDelaySeconds: 30
             periodSeconds: 10
 
