@@ -58,21 +58,21 @@ stages {
     }
 
     stage('Trivy Image Scan') {
-  steps {
-    sh '''
-      mkdir -p trivy-cache
+        steps {
+            sh '''
+            mkdir -p trivy-cache
 
-      docker run --rm \
-        -v /var/run/docker.sock:/var/run/docker.sock \
-        -v $(pwd)/trivy-cache:/root/.cache/trivy \
-        aquasec/trivy:latest image \
-        --severity HIGH,CRITICAL \
-        --exit-code 1 \
-        --no-progress \
-        chaikafe.in-app:${IMAGE_TAG}
-    '''
-  }
-}
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              -v $(pwd)/trivy-cache:/root/.cache/trivy \
+              aquasec/trivy:latest image \
+              --severity HIGH,CRITICAL \
+              --exit-code 1 \
+              --no-progress \
+              chaikafe.in-app:${IMAGE_TAG}
+            '''
+        }
+    }
 
     stage('Amazon ECR Login') {
         steps {
@@ -95,5 +95,22 @@ stages {
             sh "docker push ${ECR_REPO}:${IMAGE_TAG}"
         }
     }
+
+    stage('Update Kubernetes Deployment') {
+        steps {
+            sh """
+            git config --global user.email "admin@gmail.com"
+            git config --global user.name "jenkins"
+
+            sed -i 's|image:.*|image: ${ECR_REPO}:${IMAGE_TAG}|' kubernetes/deployment.yaml
+
+            git add kubernetes/deployment.yaml
+            git commit -m "Update image to ${IMAGE_TAG}"
+            git push origin main
+            """
+        }
+    }
+
 }
+
 }
