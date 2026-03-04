@@ -3,37 +3,42 @@ kind: Ingress
 metadata:
   name: chai-kafe-ingress
   namespace: chaikafe
-
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
+
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
 
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:561848282182:certificate/670398f1-0eed-475f-a738-382e5b6f0bcf
 
     alb.ingress.kubernetes.io/ssl-redirect: "443"
 
-spec:
-  rules:
-    - host: chaikafe.in
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: chai-kafe-service
-                port:
-                  number: 80
+    # Recommended health check
+    alb.ingress.kubernetes.io/healthcheck-path: /actuator/health
 
-    - host: www.chaikafe.in
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: chai-kafe-service
-                port:
-                  number: 80
+spec:
+  ingressClassName: alb
+
+  rules:
+  - host: chaikafe.in
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: chai-kafe-service
+            port:
+              number: 80
+
+  - host: www.chaikafe.in
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: chai-kafe-service
+            port:
+              number: 80
