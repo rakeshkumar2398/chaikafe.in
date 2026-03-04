@@ -40,7 +40,7 @@ spec:
             - name: JAVA_TOOL_OPTIONS
               value: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=25.0"
 
-            # Database configuration from Kubernetes Secret
+            # Database secrets
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
@@ -66,6 +66,22 @@ spec:
                   key: DB_USER
 
             - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: chai-kafe-db-secret
+                  key: DB_PASSWORD
+
+            # Spring Boot datasource configuration
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://mydb.cn6g4c2qk6wi.us-east-1.rds.amazonaws.com:5432/mydb
+
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: chai-kafe-db-secret
+                  key: DB_USER
+
+            - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: chai-kafe-db-secret
