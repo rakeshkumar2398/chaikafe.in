@@ -1,1 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chai-kafe-app
+  namespace: chaikafe
+  labels:
+    app: chai-kafe-app
 
+spec:
+  replicas: 2
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+  selector:
+    matchLabels:
+      app: chai-kafe-app
+
+  template:
+    metadata:
+      labels:
+        app: chai-kafe-app
+
+    spec:
+      containers:
+        - name: chai-kafe
+
+          image: 561848282182.dkr.ecr.us-east-1.amazonaws.com/chai-kafe-app:6
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 8080
+
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=25.0"
+
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "750m"
+              memory: "1Gi"
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 90
+            periodSeconds: 15
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 10
