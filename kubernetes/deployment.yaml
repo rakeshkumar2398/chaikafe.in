@@ -28,7 +28,7 @@ spec:
       containers:
         - name: chai-kafe
 
-          image: 561848282182.dkr.ecr.us-east-1.amazonaws.com/chai-kafe-app:6
+          image: 561848282182.dkr.ecr.us-east-1.amazonaws.com/chai-kafe-app:12
           imagePullPolicy: Always
 
           ports:
