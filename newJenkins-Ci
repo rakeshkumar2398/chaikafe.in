@@ -95,9 +95,9 @@ stages {
             sh "docker push ${ECR_REPO}:${IMAGE_TAG}"
         }
     }
-
     stage('Update Kubernetes Deployment') {
-        steps {
+    steps {
+        withCredentials([usernamePassword(credentialsId: 'github-creds', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
             sh """
             git config --global user.email "admin@gmail.com"
             git config --global user.name "jenkins"
@@ -106,11 +106,9 @@ stages {
 
             git add kubernetes/deployment.yaml
             git commit -m "Update image to ${IMAGE_TAG}"
-            git push origin main
+
+            git push https://${GIT_USER}:${GIT_PASS}@github.com/rakeshkumar2398/chaikafe.in.git HEAD:main
             """
         }
     }
-
-}
-
 }
