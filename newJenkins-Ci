@@ -1,114 +1,118 @@
 pipeline {
-agent any
+    agent any
 
-environment {
-    AWS_REGION = 'us-east-1'
-    ACCOUNT_ID = '561848282182'
+    environment {
+        AWS_REGION = 'us-east-1'
+        ACCOUNT_ID = '561848282182'
 
-    // ECR repository URL
-    ECR_REPO = "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/chai-kafe-app"
+        // ECR repository URL
+        ECR_REPO = "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/chai-kafe-app"
 
-    // Image tag for build
-    IMAGE_TAG = "${BUILD_NUMBER}"
+        // Image tag for build
+        IMAGE_TAG = "${BUILD_NUMBER}"
 
-    // Git repo
-    GIT_REPO_URL = "https://github.com/rakeshkumar2398/chaikafe.in.git"
-}
-
-stages {
-
-    stage('Clean Workspace') {
-        steps {
-            cleanWs()
-        }
+        // Git repo
+        GIT_REPO_URL = "https://github.com/rakeshkumar2398/chaikafe.in.git"
     }
 
-    stage('Git Checkout') {
-        steps {
-            git branch: 'main', url: "${GIT_REPO_URL}"
-        }
-    }
+    stages {
 
-    stage('Build Application') {
-        steps {
-            sh 'mvn -B clean package -DskipTests'
-        }
-    }
-
-    stage('SonarQube Scan') {
-        steps {
-            withSonarQubeEnv('sonar-token') {
-                sh 'mvn sonar:sonar'
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
             }
         }
-    }
 
-    stage('Quality Gate') {
-        steps {
-            timeout(time: 5, unit: 'MINUTES') {
-                waitForQualityGate abortPipeline: true
+        stage('Git Checkout') {
+            steps {
+                git branch: 'main', url: "${GIT_REPO_URL}"
             }
         }
-    }
 
-    stage('Docker Build Image') {
-        steps {
-            sh "docker build -t chaikafe.in-app:${IMAGE_TAG} ."
+        stage('Build Application') {
+            steps {
+                sh 'mvn -B clean package -DskipTests'
+            }
         }
-    }
 
-    stage('Trivy Image Scan') {
-        steps {
-            sh '''
-            mkdir -p trivy-cache
-
-            docker run --rm \
-              -v /var/run/docker.sock:/var/run/docker.sock \
-              -v $(pwd)/trivy-cache:/root/.cache/trivy \
-              aquasec/trivy:latest image \
-              --severity HIGH,CRITICAL \
-              --exit-code 1 \
-              --no-progress \
-              chaikafe.in-app:${IMAGE_TAG}
-            '''
+        stage('SonarQube Scan') {
+            steps {
+                withSonarQubeEnv('sonar-token') {
+                    sh 'mvn sonar:sonar'
+                }
+            }
         }
-    }
 
-    stage('Amazon ECR Login') {
-        steps {
-            sh """
-            aws ecr get-login-password --region ${AWS_REGION} \
-            | docker login --username AWS \
-            --password-stdin ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-            """
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
         }
-    }
 
-    stage('Docker Tag') {
-        steps {
-            sh "docker tag chaikafe.in-app:${IMAGE_TAG} ${ECR_REPO}:${IMAGE_TAG}"
+        stage('Docker Build Image') {
+            steps {
+                sh "docker build -t chaikafe.in-app:${IMAGE_TAG} ."
+            }
         }
-    }
 
-    stage('Docker Push') {
-        steps {
-            sh "docker push ${ECR_REPO}:${IMAGE_TAG}"
+        stage('Trivy Image Scan') {
+            steps {
+                sh '''
+                mkdir -p trivy-cache
+
+                docker run --rm \
+                  -v /var/run/docker.sock:/var/run/docker.sock \
+                  -v $(pwd)/trivy-cache:/root/.cache/trivy \
+                  aquasec/trivy:latest image \
+                  --severity HIGH,CRITICAL \
+                  --exit-code 1 \
+                  --no-progress \
+                  chaikafe.in-app:${IMAGE_TAG}
+                '''
+            }
         }
-    }
-    stage('Update Kubernetes Deployment') {
-    steps {
-        withCredentials([usernamePassword(credentialsId: 'github-creds', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
-            sh """
-            git config --global user.email "admin@gmail.com"
-            git config --global user.name "jenkins"
 
-            sed -i 's|image:.*|image: ${ECR_REPO}:${IMAGE_TAG}|' kubernetes/deployment.yaml
-
-            git add kubernetes/deployment.yaml
-            git commit -m "Update image to ${IMAGE_TAG}"
-
-            git push https://${GIT_USER}:${GIT_PASS}@github.com/rakeshkumar2398/chaikafe.in.git HEAD:main
-            """
+        stage('Amazon ECR Login') {
+            steps {
+                sh """
+                aws ecr get-login-password --region ${AWS_REGION} \
+                | docker login --username AWS \
+                --password-stdin ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+                """
+            }
         }
+
+        stage('Docker Tag') {
+            steps {
+                sh "docker tag chaikafe.in-app:${IMAGE_TAG} ${ECR_REPO}:${IMAGE_TAG}"
+            }
+        }
+
+        stage('Docker Push') {
+            steps {
+                sh "docker push ${ECR_REPO}:${IMAGE_TAG}"
+            }
+        }
+
+        stage('Update Kubernetes Deployment') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                    sh """
+                    git config --global user.email "admin@gmail.com"
+                    git config --global user.name "jenkins"
+
+                    sed -i "s|${ECR_REPO}:.*|${ECR_REPO}:${IMAGE_TAG}|" kubernetes/deployment.yaml
+
+                    git add kubernetes/deployment.yaml
+                    git commit -m "Update image to ${IMAGE_TAG}" || echo "No changes to commit"
+
+                    git push https://${GIT_USER}:${GIT_PASS}@github.com/rakeshkumar2398/chaikafe.in.git HEAD:main
+                    """
+                }
+            }
+        }
+
     }
 }
