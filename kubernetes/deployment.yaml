@@ -40,7 +40,7 @@ spec:
             - name: JAVA_TOOL_OPTIONS
               value: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=25.0"
 
-            # Database secrets
+            # Database configuration from Kubernetes Secret
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
@@ -86,6 +86,9 @@ spec:
                 secretKeyRef:
                   name: chai-kafe-db-secret
                   key: DB_PASSWORD
+
+            - name: SPRING_DATASOURCE_DRIVER_CLASS_NAME
+              value: org.postgresql.Driver
 
           resources:
             requests:
