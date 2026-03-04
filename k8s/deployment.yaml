@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: chai-kafe-app
-  namespace: chai-kafe
+  namespace: chaikafe
   labels:
     app: chai-kafe-app
 spec:
