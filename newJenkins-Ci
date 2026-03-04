@@ -1,93 +1,102 @@
 pipeline {
-  agent any
+agent any
 
-  environment {
+```
+environment {
     AWS_REGION = 'us-east-1'
     ACCOUNT_ID = '561848282182'
 
-    // ECR repo (full image repo URL without tag)
-    ECR_REPO   = "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/chai-kafe-app"
+    // ECR repository URL
+    ECR_REPO = "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/chai-kafe-app"
 
-    // Image tag for this build
-    IMAGE_TAG  = "${BUILD_NUMBER}"
+    // Image tag for build
+    IMAGE_TAG = "${BUILD_NUMBER}"
 
-    // GitOps repo details (same repo)
-    GIT_REPO_NAME   = "chaikafe.in"
-    GIT_USER_NAME   = "rakeshkumar2398"
-    GIT_REPO_URL    = "https://github.com/rakeshkumar2398/chaikafe.in.git"
-    DEPLOYMENT_FILE = "k8s/deployment.yaml"
-  }
+    // Git repo
+    GIT_REPO_URL = "https://github.com/rakeshkumar2398/chaikafe.in.git"
+}
 
-  stages {
+stages {
+
+    stage('Clean Workspace') {
+        steps {
+            cleanWs()
+        }
+    }
 
     stage('Git Checkout') {
-      steps {
-        git branch: 'main', url: "${GIT_REPO_URL}"
-      }
+        steps {
+            git branch: 'main', url: "${GIT_REPO_URL}"
+        }
     }
 
     stage('Build Application') {
-      steps {
-        sh 'mvn -B clean package -DskipTests'
-      }
+        steps {
+            sh 'mvn -B clean package -DskipTests'
+        }
     }
 
     stage('SonarQube Scan') {
-      steps {
-        withSonarQubeEnv('sonar-token') {
-          sh 'mvn -B sonar:sonar'
+        steps {
+            withSonarQubeEnv('sonar-token') {
+                sh 'mvn sonar:sonar'
+            }
         }
-      }
     }
 
     stage('Quality Gate') {
-      steps {
-        timeout(time: 5, unit: 'MINUTES') {
-          waitForQualityGate abortPipeline: true
+        steps {
+            timeout(time: 5, unit: 'MINUTES') {
+                waitForQualityGate abortPipeline: true
+            }
         }
-      }
     }
 
     stage('Docker Build Image') {
-      steps {
-        sh 'docker build -t chaikafe.in-app:${IMAGE_TAG} .'
-      }
+        steps {
+            sh "docker build -t chaikafe.in-app:${IMAGE_TAG} ."
+        }
     }
 
     stage('Trivy Image Scan') {
-      steps {
-        sh """
-          mkdir -p /data/trivy-cache
+        steps {
+            sh '''
+            mkdir -p /data/trivy-cache
 
-          docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            -v /data/trivy-cache:/root/.cache/trivy \
-            aquasec/trivy:latest image \
-            --severity HIGH,CRITICAL \
-            --exit-code 1 \
-            --no-progress \
-            chaikafe.in-app:${IMAGE_TAG}
-        """
-      }
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              -v /data/trivy-cache:/root/.cache/trivy \
+              aquasec/trivy:latest image \
+              --severity HIGH,CRITICAL \
+              --exit-code 1 \
+              --no-progress \
+              chaikafe.in-app:${IMAGE_TAG}
+            '''
+        }
     }
 
     stage('Amazon ECR Login') {
-      steps {
-        sh """
-          aws ecr get-login-password --region ${AWS_REGION} \
-          | docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-        """
-      }
+        steps {
+            sh """
+            aws ecr get-login-password --region ${AWS_REGION} \
+            | docker login --username AWS \
+            --password-stdin ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+            """
+        }
     }
 
     stage('Docker Tag') {
-      steps {
-        sh 'docker tag chaikafe.in-app:${IMAGE_TAG} ${ECR_REPO}:${IMAGE_TAG}'
-      }
+        steps {
+            sh "docker tag chaikafe.in-app:${IMAGE_TAG} ${ECR_REPO}:${IMAGE_TAG}"
+        }
     }
 
     stage('Docker Push') {
-      steps {
-        sh 'docker push ${ECR_REPO}:${IMAGE_TAG}'
-      }
+        steps {
+            sh "docker push ${ECR_REPO}:${IMAGE_TAG}"
+        }
     }
+}
+```
+
+}
