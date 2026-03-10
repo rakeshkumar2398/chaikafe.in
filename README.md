@@ -1,224 +1,298 @@
-#####################################################
+# 🌟 Chai Kafe – Full DevOps CI/CD Implementation
 
-**🌟 Chai Kafe – Full DevOps CI/CD Implementation**
+Chai Kafe is a **Spring Boot-based web application** demonstrating a **complete production-grade DevOps CI/CD pipeline** using modern cloud-native tools and GitOps deployment practices.
 
-#####################################################
+The project showcases the full lifecycle of application delivery — from development to automated deployment on Kubernetes using AWS infrastructure.
 
-Chai Kafe is a Spring Boot-based web application that demonstrates a complete DevOps CI/CD pipeline using:
+---
 
-GitHub (Source Control)
+# 🚀 Tech Stack
 
-Maven (Build Tool)
+This project integrates multiple DevOps tools and cloud services:
 
-Docker (Containerization)
+| Category | Tools Used |
+|--------|-------------|
+| Source Control | GitHub |
+| Build Tool | Maven |
+| Containerization | Docker |
+| CI/CD Automation | Jenkins |
+| Container Registry | AWS ECR |
+| Cloud Infrastructure | AWS EC2 |
+| Kubernetes | Amazon EKS |
+| GitOps | ArgoCD |
+| Ingress | AWS ALB Controller |
+| SSL Certificate | AWS ACM |
+| DNS Management | Route53 |
+| Security Scanning | Trivy |
+| Code Quality | SonarQube |
 
-AWS EC2 (Server)
+---
 
+# 🏗️ Architecture
+
+```
+Developer
+   ↓
+GitHub
+   ↓
+Jenkins CI/CD Pipeline
+   ↓
+Docker Image Build
+   ↓
 AWS ECR (Container Registry)
-
-Jenkins (CI/CD Automation)
-
-IAM Role (Secure AWS Access)
-
+   ↓
+ArgoCD GitOps Deployment
+   ↓
 Amazon EKS (Kubernetes)
+   ↓
+AWS ALB Ingress Controller
+   ↓
+Route53 DNS
+   ↓
+ACM SSL (HTTPS)
+```
 
-ArgoCD (GitOps Deployment)
+---
 
-AWS ALB (Ingress Controller)
+# 🛠 Step 1: Application Development
 
-AWS ACM (SSL Certificate)
+Developed a **Spring Boot web application** representing a café portal.
 
-Route53 (Domain Management)
+### Dependencies Used
 
-##########################################
-**🏗️ Architecture**
-##########################################
+- Spring Web
+- Spring Boot Actuator
+- Thymeleaf
 
-#**Developer → GitHub → Jenkins → Docker → AWS ECR → ArgoCD → EKS → ALB → Route53 → ACM (HTTPS)**
-#**🛠️ Step 1: Application Development**
+### Application Endpoints
 
-Created Spring Boot application
-Added dependencies:
+| Endpoint | Description |
+|--------|-------------|
+| `/` | Home Page |
+| `/menu` | Displays available menu items |
+| `/about` | About Chai Kafe |
+| `/contact` | Contact information |
 
-Spring Web
+### Local Testing
 
-Spring Boot Actuator
+Application verified locally:
 
-Thymeleaf
-
-Created simple café portal endpoints:
-
-/ → Home Page
-
-/menu → Displays available menu items
-
-/about → About Chai Kafe
-
-/contact → Contact information
-
-Verified locally using:
-
+```
 http://localhost:8080
 http://localhost:8080/menu
 http://localhost:8080/about
 http://localhost:8080/contact
+```
 
-#**🐳 Step 2: Dockerization**
-Basic Dockerfile
+---
+
+# 🐳 Step 2: Dockerization
+
+The application was containerized using Docker.
+
+### Basic Dockerfile
+
+```dockerfile
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 COPY target/task-manager-api-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java","-jar","app.jar"]
-Multi-Stage Dockerfile (Optimized Production Build)
+```
 
-Stage 1 – Build
+---
 
+### Multi-Stage Dockerfile (Optimized Production Build)
+
+**Stage 1 – Build**
+
+```dockerfile
 FROM maven:3.9.6-eclipse-temurin-17 AS builder
 WORKDIR /app
 COPY . .
 RUN mvn clean package -DskipTests
+```
 
-Stage 2 – Runtime
+**Stage 2 – Runtime**
 
+```dockerfile
 FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 COPY --from=builder /app/target/task-manager-api-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java","-jar","app.jar"]
+```
 
-#**☁️ Step 3: AWS Setup**
-EC2 Configuration
+---
 
-Amazon Linux
+# ☁️ Step 3: AWS Infrastructure Setup
 
-Docker installed
+### EC2 Configuration
 
-Jenkins installed
+- Amazon Linux
+- Docker installed
+- Jenkins installed
+- Git installed
+- IAM Role attached to EC2
 
-Git installed
+### IAM Role Permissions
 
-IAM Role attached to EC2
-
-IAM Role Permissions:
-
+```
 AmazonEC2ContainerRegistryFullAccess
+```
 
-Verified IAM:
+### IAM Verification
 
+```
 aws sts get-caller-identity
-**📦 Step 4: AWS ECR**
+```
 
-Created repository:
+---
 
+# 📦 Step 4: AWS ECR Setup
+
+Created an AWS Elastic Container Registry repository.
+
+### Create Repository
+
+```
 aws ecr create-repository --repository-name chai-kafe-app
+```
 
-Logged in:
+### Login to ECR
 
+```
 aws ecr get-login-password --region us-east-1 \
 | docker login --username AWS --password-stdin <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com
+```
 
-#**🔄 Step 5: Jenkins CI/CD Pipeline**
+---
 
-Created Jenkinsfile with stages:
+# 🔄 Step 5: Jenkins CI/CD Pipeline
 
-Clone Repository
+A fully automated **Jenkins pipeline** was implemented.
 
-Maven Build
+### Pipeline Stages
 
-SonarQube Scan
+1. Clone GitHub Repository
+2. Maven Build
+3. SonarQube Code Scan
+4. Quality Gate Validation
+5. Docker Image Build
+6. Trivy Security Scan
+7. ECR Authentication
+8. Docker Image Tagging
+9. Docker Push to ECR
+10. Update Kubernetes Deployment YAML
+11. ArgoCD GitOps Sync
 
-Quality Gate Validation
+The pipeline ensures **automated build, security validation, and deployment**.
 
-Docker Build
+---
 
-Trivy Image Scan
+# ☸️ Step 6: Kubernetes Deployment (Amazon EKS)
 
-ECR Login
+The application is deployed to **Amazon EKS cluster**.
 
-Docker Tag
+### Kubernetes Resources Created
 
-Docker Push
+- Namespace → `chai-kafe`
+- Deployment
+- Service
 
-Update Kubernetes Deployment YAML (GitOps)
+### Deployment Configuration
 
-ArgoCD Sync
+- 2 replicas for high availability
+- Container port: 8080
+- Service type: ClusterIP
 
-Pipeline fully automated.
+---
 
-#**☸️ Phase 6: Kubernetes Deployment (Amazon EKS)**
+# 🌐 Step 7: Ingress Setup with AWS ALB
 
-Manual initial deployment of image to EKS.
+Installed **AWS Load Balancer Controller** using Helm.
 
-Created:
+### Ingress Configuration
 
-Kubernetes Namespace → chai-kafe
+- Internet-facing ALB
+- Target Type: IP
+- HTTP (80) + HTTPS (443)
+- Automatic HTTP → HTTPS redirect
+- ACM SSL certificate attached
 
-Deployment (2 replicas)
+Example ALB:
 
-Service (ClusterIP)
-
-Deployment Highlights:
-
-2 replicas for high availability
-
-Port 8080 container
-
-Service exposes port 80 internally
-
-#**🌐 Phase 7: Ingress + ALB Setup (Production Grade)**
-
-Installed AWS Load Balancer Controller using Helm.
-
-Created Kubernetes Ingress:
-
-Internet-facing ALB
-
-Target type: IP
-
-HTTP (80) + HTTPS (443)
-
-SSL redirect enabled
-
-ACM certificate attached
-
-ALB created:
-
+```
 k8s-chaikafe-chaikafe-xxxxx.us-east-1.elb.amazonaws.com
-#**🔐 Phase 8: SSL + Domain Configuration**
+```
 
-Domain: chaikafe.in
+---
 
-Created ACM certificate
+# 🔐 Step 8: SSL + Domain Configuration
 
-DNS validation completed
+Domain configured using Route53.
 
-Route53 A (Alias) record mapped to ALB
+### Domain
 
-HTTPS enabled
+```
+chaikafe.in
+```
 
-Application accessible at:
+### Configuration
 
+- Created ACM SSL certificate
+- DNS validation completed
+- Route53 Alias record mapped to ALB
+
+### Application Access
+
+```
 https://chaikafe.in
 https://www.chaikafe.in
+```
 
-#**🔍 Phase 9: Application Testing on EKS**
+HTTPS is fully enabled.
 
-Verification Commands:
+---
 
+# 🔍 Step 9: Kubernetes Verification
+
+### Kubernetes Commands Used
+
+```
 kubectl get pods -n chai-kafe
 kubectl get svc -n chai-kafe
 kubectl get ingress -n chai-kafe
 kubectl logs -f deploy/chai-kafe-app -n chai-kafe
+```
 
-External Access:
+### Verification Performed
 
-Accessed via ALB DNS
+- Pod status validation
+- Service connectivity check
+- Ingress routing verification
+- HTTP → HTTPS redirect validation
+- SSL certificate verification
 
-Verified HTTP → HTTPS redirect
+---
 
-Verified SSL working properly
+# 🎯 Key DevOps Features Implemented
 
+- Complete CI/CD automation
+- Docker containerization
+- GitOps deployment with ArgoCD
+- Kubernetes orchestration using Amazon EKS
+- Infrastructure security scanning
+- Code quality validation
+- SSL-secured production deployment
+- Domain routing using Route53
 
+---
 
+# 📌 Project Outcome
 
+The **Chai Kafe DevOps implementation** demonstrates a production-ready DevOps workflow with automated build, security validation, container deployment, and GitOps-driven Kubernetes delivery.
+
+This project represents a **modern cloud-native DevOps pipeline** suitable for scalable microservice deployments.
+
+---
